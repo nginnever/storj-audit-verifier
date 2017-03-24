@@ -1,0 +1,26 @@
+{
+  "name": "storj-audit-verifier",
+  "version": "0.0.0",
+  "description": "Smart contract to verify Storj audits",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nginnever/storj-audit-verifier"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nginnever/storj-audit-verifier/issues"
+  },
+  "homepage": "https://github.com/nginnever/storj-audit-verifier",
+  "dependencies": {
+    "block-stream2": "^1.1.0",
+    "mtree": "0.0.1"
+  }
+}
