@@ -21,6 +21,14 @@ shard.leaves = []
 shard.chunks = []
 shard.stream = fs.createReadStream(testFile)
 
+// test proof with tree of depth 3 and 2^3 nodes
+// assume all hashes are right children, proving left most node (leaves[0])
+var proof = [
+  '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+  '6a29472c681be112acbf6d66c521234ae46d85b7167d246d3c13efe8c7b0e54c',
+  '5551141cf5b83aad3b4a597d0fa8da8ffcb7b1ab18f3a76b0c06cadaa1584acd'
+]
+
 // Chunk the shard data into 64 bytes chunks
 // and sha256 them to leaves of a merkle tree
 var d = 0
@@ -29,15 +37,22 @@ shard.stream
   .pipe(through2((chunk, enc, cb) => {
     if(d == 0) {
       d++
-      console.log(chunk)
       var c = getContract(address)
-      // hash is input to contract as a hex string 
+      shard.contract = c
+      loadProof(proof)
+      var p = verify(chunk.toString('hex'))
+     // console.log('root hash')
+      //var comp = crypto.createHash('sha256').update('a').digest('hex') < crypto.createHash('sha256').update('b').digest('hex')
+      //console.log(comp)
+      //console.log(p)
+      // hash is input to contract as a hex string
       c.merkleAudit(chunk.toString('hex'), {from:web3.eth.accounts[0], gas:500000})
-      console.log(chunk.toString('hex'))
-      console.log(crypto.createHash('sha256').update(chunk.toString('hex')).digest('hex'))
+
+      //console.log(chunk.toString('hex'))
+      //console.log(crypto.createHash('sha256').update(chunk.toString('hex')).digest('hex'))
       //console.log(crypto.createHash('sha256').update(chunk).digest('hex'))
     }
-    shard.chunks.push(chunk)
+    shard.chunks.push(chunk.toString('hex'))
     shard.leaves.push(crypto.createHash('sha256').update(chunk.toString('hex')).digest('hex'))
     cb()
   }, (cb) => {
@@ -62,6 +77,16 @@ shard.stream
 
 // console.log(preleaf)
 // console.log(leaf)
+
+function verify(data) {
+  var temp;
+  temp = crypto.createHash('sha256').update(data).digest('hex')
+
+  for(var i=0; i<proof.length; i++){
+    temp = crypto.createHash('sha256').update(temp).update(proof[i]).digest('hex')
+  }
+  return temp
+}
 
 function generateRoot(leaves) {
   var temp = []
@@ -95,6 +120,12 @@ function getContract (addy) {
   var inst = contract.at(addy)
 
   return inst
+}
+
+function loadProof(proof) {
+  for(var i=0; i< proof.length; i++){
+    shard.contract.setProofArray(proof[i], {from:web3.eth.accounts[0], gas:500000})
+  }
 }
 
 
