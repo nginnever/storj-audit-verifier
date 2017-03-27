@@ -21,10 +21,8 @@
       #cy {
         width: 100%;
         height: 100%;
-        position: absolute;
         left: 0;
         top: 50px;
-        z-index: 999;
       }
       h1 {
         opacity: 0.5;
@@ -33,55 +31,97 @@
     </style>
     
     <script>
-      var handleFiles = function(files) {
-        var rs = window.getFileStream(files);
-        merkleApp(rs, (tree) => {
-          console.log(tree)
+      let a
+      window.shard = {}
+      $(document).ready(function() {
+        $('#theButton').click(function() {
+          var newHTML = []
 
-          $(function(){
-            var cy = window.cy = cytoscape({
-              container: document.getElementById('cy'),
-              boxSelectionEnabled: false,
-              autounselectify: true,
-              layout: {
-                name: 'dagre'
-              },
-              style: [
-                {
-                  selector: 'node',
-                  style: {
-                    'content': 'data(trim)',
-                    'text-opacity': 0.5,
-                    'text-valign': 'data(align)',
-                    'text-halign': 'center',
-                    'background-color': 'data(color)'
-                  }
-                },
-                {
-                  selector: 'edge',
-                  style: {
-                    'width': 4,
-                    'target-arrow-shape': 'triangle',
-                    'line-color': '#9dbaea',
-                    'target-arrow-color': '#9dbaea',
-                    'curve-style': 'bezier'
-                  }
-                }
-              ],
-              elements: {
-                nodes: tree.nodes,
-                edges: tree.edges
-              },
-            });
-          });
+          var proof = a.generateProof($('#formValueId').val(), (res)=>{
+            $(".cost").html(res)
+          })
+
+          for (var i = 0; i < proof.length; i++) {
+              newHTML.push('<span style="font-size: 12px;">' + proof[i] + '</span>');
+          }
+          $(".proof").html("<p>Proof Array</p>"+
+                           "[<br/>"+newHTML.join(",<br/>")+"<br/>]")
+          $(".cost").html("waiting for tx to be mined...")
+
+          renderGraph(a.shard)
+          audit(a.shard.index)
+        });
+      });
+
+      var audit = function(index) {
+
+      }
+
+      var handleFiles = function(files) {
+        a = new merkleApp(window.shard)
+        var rs = window.getFileStream(files);
+        a.generateNodes(rs, (tree) => {
+          renderGraph(tree)
+          //console.log(tree)
         })
+      }
+
+      var handleChunk = function() {
+        window.shard.chunkSize = $('#chunkSize').val()
+      }
+
+      function renderGraph(tree){
+        $(function(){
+          var cy = window.cy = cytoscape({
+            container: document.getElementById('cy'),
+            boxSelectionEnabled: false,
+            autounselectify: true,
+            layout: {
+              name: 'dagre'
+            },
+            style: [
+              {
+                selector: 'node',
+                style: {
+                  'content': 'data(trim)',
+                  'text-opacity': 0.5,
+                  'text-valign': 'data(align)',
+                  'text-halign': 'center',
+                  'background-color': 'data(color)'
+                }
+              },
+              {
+                selector: 'edge',
+                style: {
+                  'width': 4,
+                  'target-arrow-shape': 'triangle',
+                  'line-color': '#9dbaea',
+                  'target-arrow-color': '#9dbaea',
+                  'curve-style': 'bezier'
+                }
+              }
+            ],
+            elements: {
+              nodes: tree.nodes,
+              edges: tree.edges
+            },
+          });
+        });
       }
     </script>
   </head>
 
   <body>
-    <h1>storj audit demo</h1>
+    <h1>storj audit demo (sha3)</h1>
+
     <input type="file" id="input" onchange="handleFiles(this.files)">
+    index
+    <input type="text" id="formValueId" name="valueId" size="4"/>
+    <button type="submit" id="theButton" name="submitButton">Audit Chunk</button>
+    &nbsp;&nbsp;&nbsp;chunk size in bytes
+    <input type="text" id="chunkSize" name="ChunkSize" value="64" size="6" onchange="handleChunk(this.files)"/>
+    <div class="proof"></div>
+    <div class="cost"></div>
     <div id="cy"></div>
 
   </body>

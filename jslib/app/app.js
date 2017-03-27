@@ -1,51 +1,128 @@
 'use strict'
 
+const Web3 = require('web3')
+const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
 const crypto = require('crypto')
 const MerkleTree = require('mtree')
 const fsc = require('../fixed-size-chunker')
 const through2 = require('through2')
 const fileReaderStream = require('filereader-stream')
+const SHA3 = require('browserify-sha3')
 
 const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
+const abiContract = require('../abi.js')
+const address = '0xfc37026f3eec848ee36bde69df1ababf93f83c66'
 
-function merkleApp(stream, callback) {
-  console.log(stream)
+function merkleApp(shard) {
   // Chunk the shard data into 64 bytes chunks
   // and sha256 them to leaves of a merkle tree
-  var shard = {}
-  shard.chunks = []
-  shard.leaves = []
-  shard.nodes = []
-  shard.edges = []
-  shard.preImage = false
+  this.shard = shard
+  this.shard.chunks = []
+  this.shard.leaves = []
+  this.shard.levels = []
+  this.shard.nodes = []
+  this.shard.edges = []
+  this.shard.proof = []
+  this.shard.preImage = false
+  this.shard.cost = 0
+}
 
+merkleApp.prototype.generateProof = function(index, cb) {
+  var ind = index
+  var self = this
+  var proof = []
+  var inst = getContract(address)
+  var proofHash
+  console.log(self.shard.cost)
+
+  for(var i=0; i < this.shard.levels.length-1; i++){
+    if(index%2 === 0){
+      // supply right child for proof
+      // indicate with 1
+      var t = index
+      t++
+      proofHash = this.shard.levels[i][t]
+      // try{
+      //   inst.setProofArray(proofHash, 1, {from: web3.eth.accounts[0], gas:100000})
+      // }catch(e){}
+      proof.push(proofHash)
+      proof.push('0x1000000000000000000000000000000000000000000000000000000000000000')
+    } else {
+      // supply left child for proof
+      proofHash = this.shard.levels[i][index-1]
+      // try{
+      //   inst.setProofArray(proofHash, 0, {from: web3.eth.accounts[0], gas:100000})
+      // }catch(e){}
+      proof.push(proofHash)
+      proof.push('0x0000000000000000000000000000000000000000000000000000000000000000')
+    }
+    index = Math.floor(index/2)
+  }
+
+  try{
+    self.shard.cost = web3.eth.getBalance(web3.eth.accounts[0])
+    inst.merkleAudit(this.shard.chunks[ind], this.shard.root, this.shard.proof, {from: web3.eth.accounts[0], gas:200000})
+  }catch(e){}
+  
+
+  var events = inst.allEvents()
+  events.watch(function(error, event){
+    if (error) {
+      console.log("Error: " + error);
+    } else {
+      try{
+        self.shard.cost = self.shard.cost - web3.eth.getBalance(web3.eth.accounts[0])
+        //inst.clearProof({from: web3.eth.accounts[0], gas:100000})
+      }catch(e){}
+      console.log(event.event + ": " + JSON.stringify(event.args));
+      console.log(self.shard.cost)
+      var c = self.shard.cost
+      self.shard.cost = 0
+      events = null
+      return cb('audit cost: '+c+' wei')
+    }
+  })
+  console.log(proof)
+  console.log(this.shard.root)
+  return proof
+}
+
+merkleApp.prototype.generateNodes = function(stream, callback){
+  var self = this
+  var cSize = self.shard.chunkSize || CHUNK_SIZE
   stream
-    .pipe(fsc(CHUNK_SIZE))
+    .pipe(fsc(cSize))
     .pipe(through2((chunk, enc, cb) => {
-      shard.chunks.push(chunk.toString('hex'))
-      shard.leaves.push(crypto.createHash('sha256').update(chunk.toString('hex')).digest('hex'))
+      self.shard.chunks.push(chunk.toString('hex'))
+      var d = new SHA3.SHA3Hash(256)
+      self.shard.leaves.push(d.update(chunk.toString('hex')).digest('hex'))
       cb()
     }, (cb) => {
       // Pad out remaining leaves to complete perfect binary tree
-      for(var i = shard.leaves.length; i < Math.pow(2, _nextPowerOfTwo(shard.leaves.length)); i++) {
-        shard.leaves.push(crypto.createHash('sha256').update(crypto.randomBytes(64).toString('hex')).digest('hex'))
+      for(var i = self.shard.leaves.length; i < Math.pow(2, _nextPowerOfTwo(self.shard.leaves.length)); i++) {
+        var d = new SHA3.SHA3Hash(256)
+        self.shard.leaves.push(d.update(crypto.randomBytes(64).toString('hex')).digest('hex'))
       }
 
+      self.shard.levels.push(self.shard.leaves)
+
       // calculate the root hash of the shard merkle tree
-      generateTree(shard, shard.leaves)
-      console.log(shard.root)
+      generateTree(self.shard, self.shard.leaves)
+      console.log(self.shard.root)
       //console.log(shard.nodes)
-      return callback(shard)
+      return callback(self.shard)
     }))
 }
 
 function verify(data) {
   var temp;
-  temp = crypto.createHash('sha256').update(data).digest('hex')
+  var d = new SHA3.SHA3Hash(256)
+  temp = d.update(data).digest('hex')
 
   for(var i=0; i<proof.length; i++){
-    temp = crypto.createHash('sha256').update(temp).update(proof[i]).digest('hex')
+    var d = new SHA3.SHA3Hash(256)
+    temp = d.update(temp).update(proof[i]).digest('hex')
   }
   return temp
 }
@@ -71,7 +148,7 @@ function generateTree(shard, leaves) {
     shard.nodes.push({ data: { id: leaves[i], trim: leaves[i].substring(0,3)+'...', align:'top', color: '#11479e'} })
     shard.nodes.push({ data: { id: leaves[i+1], trim: leaves[i+1].substring(0,3)+'...', align:'top', color: '#11479e'} })
 
-    var tempHash = crypto.createHash('sha256')
+    var tempHash = new SHA3.SHA3Hash(256)
     tempHash.update(leaves[i])
     tempHash.update(leaves[i+1])
     tempHash = tempHash.digest('hex')
@@ -83,6 +160,7 @@ function generateTree(shard, leaves) {
   }
   
   shard.preImage = true
+  shard.levels.push(temp)
   return generateTree(shard, temp)
 }
 
@@ -92,6 +170,13 @@ function _nextPowerOfTwo(input) {
     x++
   }
   return x
+}
+
+function getContract (addy) {
+  var contract = web3.eth.contract(abiContract)
+  var inst = contract.at(addy)
+
+  return inst
 }
 
 module.exports = merkleApp

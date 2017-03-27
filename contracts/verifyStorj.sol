@@ -2,29 +2,23 @@ pragma solidity ^0.4.0;
 
 contract verifyStorj {
   /// @title verifyStorj
-  
-  bytes rootHash;
-  bytes32[] public proof; 
 
-//   struct mtree {
-//     uint8 depth;
-//     bytes32[] leaves;
-//     bytes32[] rows;
-//   }
+  event auditEvent(bool returnValue);
   
-  function setProofArray(bytes32 input) {
-    proof.push(input);
-  }
-  
-  function merkleAudit(string data) returns (bool) {
+  function merkleAudit(string data, bytes rootHash, bytes32[] proof) returns (bool) {
     bytes memory tempHash;
+    tempHash = toBytes(sha3(data));
     
-    tempHash = toBytes(sha256(data));
-    
-    for (uint8 i = 0; i < proof.length; i++) {
-      tempHash = toBytes(sha256(tempHash, proof[i]));
+    for (uint i = 0; i < proof.length; i++) {
+      if(proof[i+1] == '0x0') {
+        tempHash = toBytes(sha3(proof[i], tempHash));
+      }
+      if(proof[i+1] == '0x1') {
+        tempHash = toBytes(sha3(tempHash, proof[i]));
+      }
     }
-
+    
+    auditEvent(equal(tempHash, rootHash));
     return equal(tempHash, rootHash);
   }
  

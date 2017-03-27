@@ -12,7 +12,7 @@ const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
 const testFile = '/Users/voxelot/Github/storj/storj-audit-verifier/test/cat.png'
 const abiContract = require('./abi.js')
-const address = '0xf93db01a6771605f32af40678ebab7b726ec129c'
+const address = '0x43f957bd62b04d187fc557267019f831d6bfcb8d'
 
 var data = 'Dont try to be a great man ... just be a man. Let history make its own judgments'
 var shard = {}

@@ -21,10 +21,12 @@
   "homepage": "https://github.com/nginnever/storj-audit-verifier",
   "dependencies": {
     "block-stream2": "^1.1.0",
+    "browserify-sha3": "0.0.2",
     "merkle-tree-solidity": "^1.0.1",
     "mtree": "0.0.1",
+    "sha3": "^1.2.0",
     "through2": "^2.0.3",
-    "web3": "^0.18.2"
+    "web3": "=0.17.0-alpha"
   },
   "devDependencies": {
     "filereader-stream": "^1.0.0"
