@@ -4,7 +4,6 @@ contract verifyStorj {
   /// @title verifyStorj
   
   bytes rootHash;
-  bytes32[] public data;
   bytes32[] public proof; 
 
 //   struct mtree {
@@ -13,19 +12,14 @@ contract verifyStorj {
 //     bytes32[] rows;
 //   }
   
-  function setChallengeData(bytes32 data1, bytes32 data2) {
-      data[0] = data1;
-      data[1] = data2;
-  }
-  
   function setProofArray(bytes32 input) {
     proof.push(input);
   }
   
-  function merkleAudit() returns (bool) {
+  function merkleAudit(string data) returns (bool) {
     bytes memory tempHash;
     
-    tempHash = toBytes(sha256(data[0], data[1]));
+    tempHash = toBytes(sha256(data));
     
     for (uint8 i = 0; i < proof.length; i++) {
       tempHash = toBytes(sha256(tempHash, proof[i]));

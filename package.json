@@ -25,5 +25,8 @@
     "mtree": "0.0.1",
     "through2": "^2.0.3",
     "web3": "^0.18.2"
+  },
+  "devDependencies": {
+    "filereader-stream": "^1.0.0"
   }
 }
