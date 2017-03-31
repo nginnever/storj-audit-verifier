@@ -22159,33 +22159,40 @@ merkleApp.prototype.generateProof = function(index, cb) {
   var ind = index
   var self = this
   var proof = []
+  var proofString = '0x'
+  var proofCode = []
   var inst = getContract(address)
   var proofHash
-  console.log(self.shard.cost)
+  for(var i=0; i< 64-(self.shard.levels.length-1); i++){
+    proofString+='0'
+  }
 
   for(var i=0; i < this.shard.levels.length-1; i++){
     if(index%2 === 0){
       // supply right child for proof
-      // indicate with 1
+      // indicate with 0
       var t = index
       t++
       proofHash = this.shard.levels[i][t]
       // try{
       //   inst.setProofArray(proofHash, 1, {from: web3.eth.accounts[0], gas:100000})
       // }catch(e){}
-      proof.push(proofHash)
-      proof.push('0x1000000000000000000000000000000000000000000000000000000000000000')
+      proof.push('0x'+proofHash)
+      proofString+='0'
     } else {
       // supply left child for proof
       proofHash = this.shard.levels[i][index-1]
       // try{
       //   inst.setProofArray(proofHash, 0, {from: web3.eth.accounts[0], gas:100000})
       // }catch(e){}
-      proof.push(proofHash)
-      proof.push('0x0000000000000000000000000000000000000000000000000000000000000000')
+      proof.push('0x'+proofHash)
+      proofString+='1'
     }
     index = Math.floor(index/2)
   }
+  console.log(proofString)
+  proofCode.push(proofString)
+  proof.unshift(proofCode)
 
   try{
     self.shard.cost = web3.eth.getBalance(web3.eth.accounts[0])
