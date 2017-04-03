@@ -8,12 +8,13 @@ contract verifyStorj {
   function merkleAudit(string data, bytes rootHash, bytes32[] proof) returns (bool) {
     bytes memory tempHash;
     tempHash = toBytes(sha3(data));
+    bytes32 proofBits = proof[0];
     
-    for (uint i = 0; i < proof.length; i++) {
-      if(proof[i+1] == '0x0') {
+    for (uint i = 1; i < proof.length; i++) {
+      if(proofBits[i] == '0') {
         tempHash = toBytes(sha3(proof[i], tempHash));
       }
-      if(proof[i+1] == '0x1') {
+      if(proofBits[i] == '1') {
         tempHash = toBytes(sha3(tempHash, proof[i]));
       }
     }
@@ -36,7 +37,7 @@ contract verifyStorj {
     }
     for (var i = 0; i<a.length; i++) {
       if (!(a[i] == b[i])) {
-  return false;
+        return false;
       }
     }
     return true;
