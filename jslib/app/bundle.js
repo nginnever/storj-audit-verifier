@@ -22122,7 +22122,7 @@ exports.createContext = Script.createContext = function (context) {
 },{"indexof":91}],139:[function(require,module,exports){
 'use strict'
 
-module.exports = [{"constant":false,"inputs":[{"name":"a","type":"bytes"},{"name":"b","type":"bytes"}],"name":"equal","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"input","type":"bytes32"}],"name":"toBytes","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"data","type":"string"},{"name":"rootHash","type":"bytes"},{"name":"proof","type":"bytes32[]"}],"name":"merkleAudit","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"test2","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"h","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"test3","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"test","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"name":"returnValue","type":"bool"}],"name":"auditEvent","type":"event"}]
+module.exports = [{"constant":false,"inputs":[{"name":"a","type":"bytes"},{"name":"b","type":"bytes"}],"name":"equal","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"input","type":"bytes32"}],"name":"toBytes","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"chunk","type":"string"},{"name":"rootHash","type":"bytes32"},{"name":"proof","type":"bytes32[]"}],"name":"merkleAudit","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"byteArray","type":"bytes"},{"name":"byteArray2","type":"bytes"}],"name":"concat","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"depth","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"data","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tempHash2","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tempHash","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"to_binary","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"name":"returnValue","type":"bool"}],"name":"auditEvent","type":"event"}]
 
 },{}],140:[function(require,module,exports){
 'use strict'
@@ -22139,7 +22139,7 @@ const SHA3 = require('browserify-sha3')
 const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
 const abiContract = require('../abi.js')
-const address = '0xfc37026f3eec848ee36bde69df1ababf93f83c66'
+const address = '0x75c50b331d624b415f5ff0c513ae3cd69c93c3a8'
 
 function merkleApp(shard) {
   // Chunk the shard data into 64 bytes chunks
@@ -22160,12 +22160,9 @@ merkleApp.prototype.generateProof = function(index, cb) {
   var self = this
   var proof = []
   var proofString = '0x'
-  var proofCode = []
+  //var proofCode = []
   var inst = getContract(address)
   var proofHash
-  for(var i=0; i< 64-(self.shard.levels.length-1); i++){
-    proofString+='0'
-  }
 
   for(var i=0; i < this.shard.levels.length-1; i++){
     if(index%2 === 0){
@@ -22174,29 +22171,42 @@ merkleApp.prototype.generateProof = function(index, cb) {
       var t = index
       t++
       proofHash = this.shard.levels[i][t]
-      // try{
-      //   inst.setProofArray(proofHash, 1, {from: web3.eth.accounts[0], gas:100000})
-      // }catch(e){}
       proof.push('0x'+proofHash)
-      proofString+='0'
+      proofString+='00'
     } else {
-      // supply left child for proof
+      // supply left child for proof 1
       proofHash = this.shard.levels[i][index-1]
-      // try{
-      //   inst.setProofArray(proofHash, 0, {from: web3.eth.accounts[0], gas:100000})
-      // }catch(e){}
       proof.push('0x'+proofHash)
-      proofString+='1'
+      proofString+='01'
     }
     index = Math.floor(index/2)
   }
-  console.log(proofString)
-  proofCode.push(proofString)
-  proof.unshift(proofCode)
+  // for(var i=0; i< 64-(self.shard.levels.length-1)); i++){
+  //   proofString+='0'
+  // }
+  //proofCode.push(proofString)
+  proof.unshift(proofString)
 
   try{
+    var test = []
+    console.log('chunk')
+    //console.log(decodeHex(this.shard.chunks[ind]))
+    console.log(this.shard.root)
+    console.log(this.shard.chunks[ind])
+   // console.log(decodeHex('0x3639366536623733323036363666373232303730366336313665366536393665'))
     self.shard.cost = web3.eth.getBalance(web3.eth.accounts[0])
-    inst.merkleAudit(this.shard.chunks[ind], this.shard.root, this.shard.proof, {from: web3.eth.accounts[0], gas:200000})
+    console.log(this.shard.leaves[6])
+      var d = new SHA3.SHA3Hash(256)
+      d.update(this.shard.leaves[7])
+      d.update(this.shard.leaves[6])
+      d = d.digest('hex')
+      console.log(d)
+    inst.merkleAudit(this.shard.chunks[ind], '0x'+this.shard.root, proof, {from: web3.eth.accounts[0], gas:3000000}, (err, res) => {
+      console.log(err)
+    })
+    // inst.func(this.shard.chunks[ind], '0x'+this.shard.root, proof, {from: web3.eth.accounts[0], gas:3000000}, (err, res) => {
+    //   console.log(err)
+    // })
   }catch(e){}
   
 
@@ -22207,7 +22217,6 @@ merkleApp.prototype.generateProof = function(index, cb) {
     } else {
       try{
         self.shard.cost = self.shard.cost - web3.eth.getBalance(web3.eth.accounts[0])
-        //inst.clearProof({from: web3.eth.accounts[0], gas:100000})
       }catch(e){}
       console.log(event.event + ": " + JSON.stringify(event.args));
       console.log(self.shard.cost)
@@ -22229,22 +22238,22 @@ merkleApp.prototype.generateNodes = function(stream, callback){
     .pipe(fsc(cSize))
     .pipe(through2((chunk, enc, cb) => {
       self.shard.chunks.push(chunk.toString('hex'))
-      var d = new SHA3.SHA3Hash(256)
-      self.shard.leaves.push(d.update(chunk.toString('hex')).digest('hex'))
+      //var d = new SHA3.SHA3Hash(256)
+      //self.shard.leaves.push(d.update(chunk.toString('hex')).digest('hex'))
+      self.shard.leaves.push(sha3Hex(chunk.toString('hex')))
       cb()
     }, (cb) => {
       // Pad out remaining leaves to complete perfect binary tree
       for(var i = self.shard.leaves.length; i < Math.pow(2, _nextPowerOfTwo(self.shard.leaves.length)); i++) {
         var d = new SHA3.SHA3Hash(256)
-        self.shard.leaves.push(d.update(crypto.randomBytes(64).toString('hex')).digest('hex'))
+        //self.shard.leaves.push(d.update(crypto.randomBytes(64).toString('hex')).digest('hex'))
+        self.shard.leaves.push(sha3Hex(crypto.randomBytes(64).toString('hex')))
       }
 
       self.shard.levels.push(self.shard.leaves)
 
       // calculate the root hash of the shard merkle tree
       generateTree(self.shard, self.shard.leaves)
-      console.log(self.shard.root)
-      //console.log(shard.nodes)
       return callback(self.shard)
     }))
 }
@@ -22281,11 +22290,13 @@ function generateTree(shard, leaves) {
 
     shard.nodes.push({ data: { id: leaves[i], trim: leaves[i].substring(0,3)+'...', align:'top', color: '#11479e'} })
     shard.nodes.push({ data: { id: leaves[i+1], trim: leaves[i+1].substring(0,3)+'...', align:'top', color: '#11479e'} })
+    
+    var tempHash = sha3Hex(leaves[i]+leaves[i+1])
+    // var tempHash = new SHA3.SHA3Hash(256)
 
-    var tempHash = new SHA3.SHA3Hash(256)
-    tempHash.update(leaves[i])
-    tempHash.update(leaves[i+1])
-    tempHash = tempHash.digest('hex')
+    // tempHash.update(decodeHex(leaves[i]))
+    // tempHash.update(decodeHex(leaves[i+1]))
+    // tempHash = tempHash.digest('hex')
 
     shard.edges.push({ data: { source: tempHash, target: leaves[i] } })
     shard.edges.push({ data: { source: tempHash, target: leaves[i+1] } })
@@ -22311,6 +22322,19 @@ function getContract (addy) {
   var inst = contract.at(addy)
 
   return inst
+}
+
+var decodeHex = function(s) {
+    var o = [];
+    var alpha = '0123456789abcdef';
+    for (var i = (s.substr(0, 2) == '0x' ? 2 : 0); i < s.length; i += 2) {
+        var index1 = alpha.indexOf(s[i]);
+        var index2 = alpha.indexOf(s[i + 1]);
+        if (index1 < 0 || index2 < 0)
+            throw("Bad input to hex decoding: " + s + " " + i + " " + index1 + " " + index2)
+        o.push(index1 * 16 + index2);
+    }
+    return o;
 }
 
 module.exports = merkleApp
