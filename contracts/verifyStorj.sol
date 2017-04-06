@@ -1,10 +1,10 @@
 pragma solidity ^0.4.0;
 
-contract verifyStorj {
+contract MerkleVerify {
   
   event auditEvent(bool returnValue);
   
-  function merkleAudit(bytes chunk, bytes32 rootHash, bytes32[] proof) external returns (bool) {
+  function audit(bytes chunk, bytes32 rootHash, bytes32[] proof) external returns (bool) {
     bytes memory tempHash;
     tempHash = toBytes(sha3(chunk));
     
