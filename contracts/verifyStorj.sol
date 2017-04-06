@@ -1,29 +1,27 @@
 pragma solidity ^0.4.0;
 
 contract verifyStorj {
-  /// @title verifyStorj
-
+  
   event auditEvent(bool returnValue);
   
-  function merkleAudit(string data, bytes rootHash, bytes32[] proof) returns (bool) {
+  function merkleAudit(bytes chunk, bytes32 rootHash, bytes32[] proof) external returns (bool) {
     bytes memory tempHash;
-    tempHash = toBytes(sha3(data));
-    bytes32 proofBits = proof[0];
+    tempHash = toBytes(sha3(chunk));
     
     for (uint i = 1; i < proof.length; i++) {
-      if(proofBits[i] == '0') {
-        tempHash = toBytes(sha3(proof[i], tempHash));
-      }
-      if(proofBits[i] == '1') {
+      if(proof[0][i-1] == 0x00) {
         tempHash = toBytes(sha3(tempHash, proof[i]));
+      }
+      if(proof[0][i-1] == 0x01) {
+        tempHash = toBytes(sha3(proof[i], tempHash));
       }
     }
     
-    auditEvent(equal(tempHash, rootHash));
-    return equal(tempHash, rootHash);
+    auditEvent(equal(tempHash, toBytes(rootHash)));
+    return equal(tempHash, toBytes(rootHash));
   }
  
-   function toBytes(bytes32 input) constant returns (bytes) {
+  function toBytes(bytes32 input) constant returns (bytes) {
     bytes memory output = new bytes(32);
     for (uint8 i = 0; i < 32; i++) {
       output[i] = input[i];
