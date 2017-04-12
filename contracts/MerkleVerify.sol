@@ -1,6 +1,6 @@
 pragma solidity ^0.4.0;
 
-contract MerkleVerify {
+library MerkleVerify {
   
   event auditEvent(bool returnValue);
   
