@@ -4,20 +4,22 @@ library MerkleVerifyv2 {
   
   event auditEvent(bool returnValue);
   
-  function audit(uint8 index, bytes32 rootHash, bytes32[] proof) external returns (bool) {
+  function audit(uint index, bytes32 rootHash, bytes32[] proof) external returns (bool) {
     // use the index to determine the node ordering
     // index ranges 1 to n
     
+    uint i = index;
+    
     bytes memory tempHash = toBytes(proof[0]);
     
-    for (uint i = 1; i < proof.length; i++) {
-      if(index%2 == 1) {
-        tempHash = toBytes(sha3(tempHash, proof[i]));
-        index = (index/2) + 1;
+    for (uint j = 1; j < proof.length; j++) {
+      if(i%2 == 1) {
+        tempHash = toBytes(sha3(tempHash, proof[j]));
+        i = (i/2) + 1;
       }
-      if(index%2 == 0) {
-        tempHash = toBytes(sha3(proof[i], tempHash));
-        index = index/2;
+      if(i%2 == 0) {
+        tempHash = toBytes(sha3(proof[j], tempHash));
+        i = i/2;
       }
     }
     
