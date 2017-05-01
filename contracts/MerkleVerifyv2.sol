@@ -8,7 +8,7 @@ library MerkleVerifyv2 {
     // use the index to determine the node ordering
     // index ranges 1 to n
     
-    bytes memory tempHash = proof[0];
+    bytes memory tempHash = toBytes(proof[0]);
     
     for (uint i = 1; i < proof.length; i++) {
       if(index%2 == 1) {
