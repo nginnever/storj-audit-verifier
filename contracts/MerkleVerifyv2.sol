@@ -6,7 +6,7 @@ library MerkleVerifyv2 {
   
   function audit(uint8 index, bytes32 rootHash, bytes32[] proof) external returns (bool) {
     // use the index to determine the hash order to root
-    bytes memory tempHash;
+    bytes memory tempHash = proof[0];
     
     for (uint i = 1; i < proof.length; i++) {
       if(index%2 == 0) {
