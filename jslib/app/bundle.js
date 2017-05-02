@@ -22122,7 +22122,7 @@ exports.createContext = Script.createContext = function (context) {
 },{"indexof":91}],139:[function(require,module,exports){
 'use strict'
 
-module.exports = [{"constant":false,"inputs":[{"name":"a","type":"bytes"},{"name":"b","type":"bytes"}],"name":"equal","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"input","type":"bytes32"}],"name":"toBytes","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"chunk","type":"bytes"},{"name":"rootHash","type":"bytes32"},{"name":"proof","type":"bytes32[]"}],"name":"merkleAudit","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"name":"returnValue","type":"bool"}],"name":"auditEvent","type":"event"}]
+module.exports = [{"constant":false,"inputs":[{"name":"index","type":"uint256"},{"name":"rootHash","type":"bytes32"},{"name":"proof","type":"bytes32[]"}],"name":"audit","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"a","type":"bytes"},{"name":"b","type":"bytes"}],"name":"equal","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"ind","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"input","type":"bytes32"}],"name":"toBytes","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tempHash1","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"tempHash0","outputs":[{"name":"","type":"bytes"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"root","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"name":"returnValue","type":"bool"}],"name":"auditEvent","type":"event"}]
 
 },{}],140:[function(require,module,exports){
 'use strict'
@@ -22139,7 +22139,7 @@ const SHA3 = require('browserify-sha3')
 const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
 const abiContract = require('../abi.js')
-const address = '0x38242c82478117e94147d140507866dd063d063c'
+const address = '0x53fed649ccac8324f684d6ea589e27760ce57542'
 
 function merkleApp(shard) {
   // Chunk the shard data into 64 bytes chunks
@@ -22156,36 +22156,32 @@ function merkleApp(shard) {
 }
 
 merkleApp.prototype.generateProof = function(index, cb) {
-  var ind = index
+  var ind = index-1
   var self = this
   var proof = []
-  var proofString = '0x'
+  proof.push('0x'+this.shard.levels[0][ind])
   var inst = getContract(address)
   var proofHash
 
   for(var i=0; i < this.shard.levels.length-1; i++){
-    if(index%2 === 0){
+    if(ind%2 === 0){
       // supply right child for proof
       // indicate with 0
-      var t = index
+      var t = ind
       t++
       proofHash = this.shard.levels[i][t]
       proof.push('0x'+proofHash)
-      proofString+='00'
     } else {
       // supply left child for proof 1
-      proofHash = this.shard.levels[i][index-1]
+      proofHash = this.shard.levels[i][ind-1]
       proof.push('0x'+ proofHash)
-      proofString+='01'
     }
-    index = Math.floor(index/2)
+    ind = Math.floor(ind/2)
   }
-
-  proof.unshift(proofString)
 
   try{
     self.shard.cost = web3.eth.getBalance(web3.eth.accounts[0])
-    inst.merkleAudit(this.shard.chunks[ind], '0x'+this.shard.root, proof, {from: web3.eth.accounts[0], gas:3000000}, (err, res) => {
+    inst.audit(index, '0x'+this.shard.root, proof, {from: web3.eth.accounts[0], gas:3000000}, (err, res) => {
       console.log(err)
     })
   }catch(e){}
@@ -22262,8 +22258,8 @@ function generateTree(shard, leaves) {
 
   for(var i = 0; i < leaves.length; i+=2) {
     if(shard.preImage === false){
-      shard.nodes.push({ data: { id: i, trim: i, align:'bottom', color: '#e6e600'} })
-      shard.nodes.push({ data: { id: i+1, trim: i+1, align:'bottom', color: '#e6e600'} })
+      shard.nodes.push({ data: { id: i, trim: i+1, align:'bottom', color: '#e6e600'} })
+      shard.nodes.push({ data: { id: i+1, trim: i+2, align:'bottom', color: '#e6e600'} })
       shard.edges.push({ data: { source: leaves[i], target: i } })
       shard.edges.push({ data: { source: leaves[i+1], target: i+1 } })
     }
