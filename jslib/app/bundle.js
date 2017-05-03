@@ -22139,7 +22139,7 @@ const SHA3 = require('browserify-sha3')
 const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
 const abiContract = require('../abi.js')
-const address = '0x436459d3f8ecd68f508ea5a31675528eedfd8a3f'
+const address = '0x83629c80c4efef0839928d97c19a00d711f78644'
 
 function merkleApp(shard) {
   // Chunk the shard data into 64 bytes chunks
