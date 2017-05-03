@@ -42,11 +42,13 @@
             $(".cost").html(res)
           })
 
-          for (var i = 0; i < proof.length; i++) {
-              newHTML.push('<span style="font-size: 12px;">' + proof[i] + '</span>');
-          }
-          $(".proof").html("<p>Proof Array</p>"+
-                           "[<br/>"+newHTML.join(",<br/>")+"<br/>]")
+          $(".proof").html("<p>" + proof + "</p>")
+
+          // for (var i = 0; i < proof.length; i++) {
+          //     newHTML.push('<span style="font-size: 12px;">' + proof[i] + '</span>');
+          // }
+          // $(".proof").html("<p>Proof Array</p>"+
+          //                  "[<br/>"+newHTML.join(",<br/>")+"<br/>]")
           $(".cost").html("waiting for tx to be mined...")
 
           renderGraph(a.shard)

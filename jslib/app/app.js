@@ -12,7 +12,7 @@ const SHA3 = require('browserify-sha3')
 const AUDIT_BYTES = 32
 const CHUNK_SIZE = 64
 const abiContract = require('../abi.js')
-const address = '0x53fed649ccac8324f684d6ea589e27760ce57542'
+const address = '0x436459d3f8ecd68f508ea5a31675528eedfd8a3f'
 
 function merkleApp(shard) {
   // Chunk the shard data into 64 bytes chunks
@@ -31,10 +31,11 @@ function merkleApp(shard) {
 merkleApp.prototype.generateProof = function(index, cb) {
   var ind = index-1
   var self = this
-  var proof = []
-  proof.push('0x'+this.shard.levels[0][ind])
+  var proof = '0x'
+  proof+=this.shard.levels[0][ind]
   var inst = getContract(address)
   var proofHash
+  console.log(proof)
 
   for(var i=0; i < this.shard.levels.length-1; i++){
     if(ind%2 === 0){
@@ -43,13 +44,14 @@ merkleApp.prototype.generateProof = function(index, cb) {
       var t = ind
       t++
       proofHash = this.shard.levels[i][t]
-      proof.push('0x'+proofHash)
+      proof+=proofHash
     } else {
       // supply left child for proof 1
       proofHash = this.shard.levels[i][ind-1]
-      proof.push('0x'+ proofHash)
+      proof+=proofHash
     }
     ind = Math.floor(ind/2)
+    console.log(proofHash)
   }
 
   try{
@@ -57,7 +59,9 @@ merkleApp.prototype.generateProof = function(index, cb) {
     inst.audit(index, '0x'+this.shard.root, proof, {from: web3.eth.accounts[0], gas:3000000}, (err, res) => {
       console.log(err)
     })
-  }catch(e){}
+  }catch(e){
+    console.log(e)
+  }
   
 
   var events = inst.allEvents()
