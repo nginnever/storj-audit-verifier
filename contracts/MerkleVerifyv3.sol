@@ -1,6 +1,6 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-contract MerkleVerifyv3 {
+contract MerkleVerify {
   
   event auditEvent(bool returnValue);
   function audit(uint index, bytes32 rootHash, bytes proof) returns (bool) {
